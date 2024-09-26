@@ -1,20 +1,22 @@
 const express = require('express');
 const Subscription = require('../models/Subscription');
+const { authenticateToken } = require('../middleware/auth'); // Assuming you have an authentication middleware
 const router = express.Router();
 
-// Get subscriptions
-router.get('/', async (req, res) => {
+// Get subscriptions for the authenticated user
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const subscriptions = await Subscription.find();
+    const subscriptions = await Subscription.find({ user: req.user.id }); // Find subscriptions belonging to the user
     res.json(subscriptions);
   } catch (error) {
     console.error('Error fetching subscriptions:', error);
     res.status(500).json({ message: 'Error fetching subscriptions' });
   }
+  
 });
 
 // Create subscription route
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const { name, cost, renewalDate, category } = req.body;
 
   // Optionally validate the input here
@@ -23,7 +25,14 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const newSubscription = new Subscription({ name, cost, renewalDate, category });
+    const newSubscription = new Subscription({
+      name,
+      cost,
+      renewalDate,
+      category,
+      user: req.user.id, // Associate the subscription with the authenticated user
+    });
+    
     await newSubscription.save();
     res.status(201).json({ message: 'Subscription created successfully', newSubscription });
   } catch (error) {
@@ -33,11 +42,16 @@ router.post('/', async (req, res) => {
 });
 
 // Edit subscription
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
-    const updatedSubscription = await Subscription.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedSubscription = await Subscription.findOneAndUpdate(
+      { _id: req.params.id, user: req.user.id }, // Ensure only the user who created the subscription can update it
+      req.body,
+      { new: true }
+    );
+
     if (!updatedSubscription) {
-      return res.status(404).json({ message: 'Subscription not found' });
+      return res.status(404).json({ message: 'Subscription not found or you are not authorized to edit it' });
     }
     res.json(updatedSubscription);
   } catch (error) {
@@ -47,11 +61,14 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete subscription
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
-    const deletedSubscription = await Subscription.findByIdAndDelete(req.params.id);
+    const deletedSubscription = await Subscription.findOneAndDelete(
+      { _id: req.params.id, user: req.user.id } // Ensure only the user who created the subscription can delete it
+    );
+
     if (!deletedSubscription) {
-      return res.status(404).json({ message: 'Subscription not found' });
+      return res.status(404).json({ message: 'Subscription not found or you are not authorized to delete it' });
     }
     res.status(204).send();
   } catch (error) {

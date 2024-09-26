@@ -5,6 +5,7 @@ const SubscriptionSchema = new mongoose.Schema({
   cost: { type: Number, required: true },
   renewalDate: { type: Date, required: true },
   category: { type: String, required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Add user reference
 });
 
 module.exports = mongoose.model('Subscription', SubscriptionSchema);
