@@ -5,7 +5,7 @@ const SubscriptionSchema = new mongoose.Schema({
   cost: { type: Number, required: true },
   renewalDate: { type: Date, required: true },
   category: { type: String, required: true },
-  platform: { type: String, required: true }, // New platform field
+  // platform: { type: String, required: true }, // New platform field
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // User reference
 });
 
