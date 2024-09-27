@@ -4,7 +4,7 @@ const { authenticateToken } = require('../middleware/auth'); // Authentication m
 const router = express.Router();
 
 // Get a list of platforms for the authenticated user
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/platforms', authenticateToken, async (req, res) => {
   try {
     const platforms = await Platform.find({ user: req.user.id }); // Fetch platforms belonging to the user
     res.json(platforms);
@@ -15,7 +15,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Add a new platform
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/platforms', authenticateToken, async (req, res) => {
   const { name } = req.body;
 
   // Optionally validate input
